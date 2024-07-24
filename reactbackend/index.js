@@ -22,9 +22,14 @@ mongoose.connect(process.env.mongouri ,{
 });
 
 app.post('/register',(req, res)=>{
-    collation.create(req.body)
-    .then(user => res.json(user))
-    .catch(err=> res.json(err))
+    const{name,email,phonenumber,password}=req.body;
+    bcrypt.hash(password,10)
+    .then(hash=>{
+        collation.create({name,email,phonenumber,password:hash})
+        .then(user => res.json(user))
+        .catch(err=> res.json(err))
+    })
+    .catch(error=>console.log(error))
 });
 
 app.post('/login',(req,res)=>{
