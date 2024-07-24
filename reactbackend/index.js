@@ -57,11 +57,13 @@ app.post('/adminlogin',(req,res)=>{
     collation.findOne({email:email})
     .then(user=>{
         if (user) {
-            if (user.email === email && user.password === password) {
-                res.json('Succesful Login')
-            } else {
-                res.json('login Error')
-            }
+            bcrypt.compare(password, user.password,(err,response)=>{
+                if (response) {
+                    res.json('Succesful Login')
+                }else{
+                    res.json('login Error')
+                }
+            })
         }else{
             res.json("no data found")
         }
