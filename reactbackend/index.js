@@ -33,16 +33,18 @@ app.post('/register',(req, res)=>{
 });
 
 app.post('/login',(req,res)=>{
-
+    
     const {email,password}= req.body;
     collation.findOne({email:email})
     .then(user=>{
         if (user) {
-            if (user.email === email && user.password === password) {
-                res.json('Succesful Login')
-            } else {
-                res.json('login Error')
-            }
+            bcrypt.compare(password, user.password, (error,response) => {
+                if (response) {
+                    res.json('Succesful Login')
+                }else{
+                    res.json('login Error')
+                }
+            })
         }else{
             res.json("no data found")
         }
@@ -52,7 +54,6 @@ app.post('/login',(req,res)=>{
 app.post('/adminlogin',(req,res)=>{
 
     const {email,password}= req.body;
-
     collation.findOne({email:email})
     .then(user=>{
         if (user) {
