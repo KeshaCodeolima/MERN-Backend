@@ -82,22 +82,20 @@ app.post('/sendemail',(req,res)=>{
    collation.findOne({email:email})
    .then(user=>{
     if (user) {
-        if (user.email===email) {
-            sendemail.sendMail({
-                from:"kulasekarakeshan41@gmail.com",
-                to: email,
-                subject:"FRIST TESTING MAIL",
-                text:"http://localhost:3000/forgetpage"
-            },(err)=>{
-                if (err) {
-                    res.json("Email is not sent beacuse of "+ err)
-                } else {
-                    res.json("Email send Successfully")
-                }
-            })
-        } else {
-            res.json("The Email Not Found")
-        }
+        sendemail.sendMail({
+            from:"kulasekarakeshan41@gmail.com",
+            to: email,
+            subject:"FRIST TESTING MAIL",
+            text:"http://localhost:3000/forgetpage"
+        },(err)=>{
+            if (err) {
+                res.json("Email is not sent beacuse of "+ err)
+            } else {
+                res.json("Email send Successfully")
+            }
+        })
+    }else {
+        res.json("The Email Not Found");
     }
    })
 });
