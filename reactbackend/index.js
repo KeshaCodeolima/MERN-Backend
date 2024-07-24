@@ -110,7 +110,8 @@ app.post('/update-password',(req, res) => {
     .then(async user=>{
         if (user) {
             if (user.email===email) {
-                user.password = newPassword
+                const hashedpassword = await bcrypt.hash(newPassword,10)
+                user.password = hashedpassword
                 await user.save();
                 res.json("Password Update Successfully")
             } else {
