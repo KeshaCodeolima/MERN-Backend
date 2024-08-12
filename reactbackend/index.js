@@ -54,7 +54,8 @@ app.post('/login',(req,res)=>{
 app.post('/adminlogin',(req,res)=>{
 
     const {email,password}= req.body;
-    collation.findOne({email:email})
+    if (email === process.env.Adminemail) {
+        collation.findOne({email:process.env.Adminemail})
     .then(user=>{
         if (user) {
             bcrypt.compare(password, user.password,(err,response)=>{
@@ -68,6 +69,9 @@ app.post('/adminlogin',(req,res)=>{
             res.json("no data found")
         }
     })
+    } else {
+        res.json("Invalid Email Input")
+    }
 });
 
 const sendemail = nodemailer.createTransport({
