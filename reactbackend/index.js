@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const nodemailer = require('nodemailer')
+const bcrypt = require('bcrypt');
 const collation = require('./Database');
 
 
@@ -21,22 +22,29 @@ mongoose.connect(process.env.mongouri ,{
 });
 
 app.post('/register',(req, res)=>{
-    collation.create(req.body)
-    .then(user => res.json(user))
-    .catch(err=> res.json(err))
+    const{name,email,phonenumber,password}=req.body;
+    bcrypt.hash(password,10)
+    .then(hash=>{
+        collation.create({name,email,phonenumber,password:hash})
+        .then(user => res.json(user))
+        .catch(err=> res.json(err))
+    })
+    .catch(error=>console.log(error))
 });
 
 app.post('/login',(req,res)=>{
-
+    
     const {email,password}= req.body;
     collation.findOne({email:email})
     .then(user=>{
         if (user) {
-            if (user.email === email && user.password === password) {
-                res.json('Succesful Login')
-            } else {
-                res.json('login Error')
-            }
+            bcrypt.compare(password, user.password, (error,response) => {
+                if (response) {
+                    res.json('Succesful Login')
+                }else{
+                    res.json('login Error')
+                }
+            })
         }else{
             res.json("no data found")
         }
@@ -46,19 +54,24 @@ app.post('/login',(req,res)=>{
 app.post('/adminlogin',(req,res)=>{
 
     const {email,password}= req.body;
-
-    collation.findOne({email:email})
+    if (email === process.env.Adminemail) {
+        collation.findOne({email:process.env.Adminemail})
     .then(user=>{
         if (user) {
-            if (user.email === email && user.password === password) {
-                res.json('Succesful Login')
-            } else {
-                res.json('login Error')
-            }
+            bcrypt.compare(password, user.password,(err,response)=>{
+                if (response) {
+                    res.json('Succesful Login')
+                }else{
+                    res.json('login Error')
+                }
+            })
         }else{
             res.json("no data found")
         }
     })
+    } else {
+        res.json("Invalid Email Input")
+    }
 });
 
 const sendemail = nodemailer.createTransport({
@@ -73,27 +86,23 @@ app.post('/sendemail',(req,res)=>{
    collation.findOne({email:email})
    .then(user=>{
     if (user) {
-        if (user.email===email) {
-            sendemail.sendMail({
-                from:"kulasekarakeshan41@gmail.com",
-                to: email,
-                subject:"FRIST TESTING MAIL",
-                text:"http://localhost:3000/forgetpage"
-            },(err)=>{
-                if (err) {
-                    res.json("Email is not sent beacuse of "+ err)
-                } else {
-                    res.json("Email send Successfully")
-                }
-            })
-        } else {
-            res.json("The Email Not Found")
-        }
+        sendemail.sendMail({
+            from:"kulasekarakeshan41@gmail.com",
+            to: email,
+            subject:"FRIST TESTING MAIL",
+            text:"http://localhost:3000/forgetpage"
+        },(err)=>{
+            if (err) {
+                res.json("Email is not sent beacuse of "+ err)
+            } else {
+                res.json("Email send Successfully")
+            }
+        })
+    }else {
+        res.json("The Email Not Found");
     }
    })
 });
-
-
 app.post('/update-password',(req, res) => {
     const { email,newPassword } = req.body;
 
@@ -101,7 +110,8 @@ app.post('/update-password',(req, res) => {
     .then(async user=>{
         if (user) {
             if (user.email===email) {
-                user.password = newPassword
+                const hashedpassword = await bcrypt.hash(newPassword,10)
+                user.password = hashedpassword
                 await user.save();
                 res.json("Password Update Successfully")
             } else {
