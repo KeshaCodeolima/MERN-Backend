@@ -103,8 +103,6 @@ app.post('/sendemail',(req,res)=>{
     }
    })
 });
-
-
 app.post('/update-password',(req, res) => {
     const { email,newPassword } = req.body;
 
